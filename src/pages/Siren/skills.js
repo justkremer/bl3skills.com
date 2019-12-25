@@ -3,8 +3,79 @@ import SKILLS from '@constants/skills';
 function percent (rank, unit) {
   return Math.round(rank * unit * 10) / 10;
 }
-function flat (rank, level, unit) {
-  return Math.floor(rank * unit);
+function flat (rank, level, unit, base = 0) {
+  return Math.floor(rank * unit + base);
+}
+/* some skills increase by an amount that decreases by a constant factor each time */
+function decreasingAddition (rank, level, unit, multiplier) {
+  var result = 0;
+  for (var i = 0; i < rank; i++){
+    var currentMultiplier = Math.pow(multiplier, i);
+    result = result + currentMultiplier * unit;
+  }
+  return Math.floor(result);
+}
+
+/* There are skills that dont follow a linear patch for some increases. Data came from official builder.*/
+
+// Arms Deal Splash Damage Reduction / same as Helping Hands and One With Nature
+function getArmsDealSplashDamageReduction(rank) {
+  switch (rank) {
+    case 1:
+      return 12;
+    case 2:
+      return 21;
+    case 3:
+      return 28;
+    case 4:
+      return 35;
+    case 5:
+      return 40;
+    default:
+      return 0;
+  }
+}
+
+// Mindfulness Shield Regen Delay
+function getMindfulnessShieldRegenDelay(rank) {
+  switch (rank) {
+    case 1:
+      return 9;
+    case 2:
+      return 17;
+    case 3:
+      return 23;
+    default:
+      return 0;
+  }
+}
+
+// Fast Hands Reload
+function getFastHandsReloadSpeed(rank) {
+  switch (rank) {
+    case 1:
+      return 7;
+    case 2:
+      return 14;
+    case 3:
+      return 19;
+    default:
+      return 0;
+  }
+}
+
+// Fast Hands Other Speeds
+function getFastHandsOtherSpeed(rank) {
+  switch (rank) {
+    case 1:
+      return 16;
+    case 2:
+      return 28;
+    case 3:
+      return 36;
+    default:
+      return 0;
+  }
 }
 
 /* eslint-disable quotes */
@@ -39,17 +110,17 @@ const skills = {
       "Arms Deal": {
         ranks: 5,
         text: "Amara deals increased Splash Damage, and takes reduced Splash Damage.",
-        effect: (rank, level) => `Splash Damage: +${percent(rank, 4)}%, Splash Damage Reduction +${percent(rank, 12)}%`,
+        effect: (rank, level) => `Splash Damage: +${percent(rank, 4)}%, Splash Damage Reduction +${getArmsDealSplashDamageReduction(rank)}%`,
       },
       "Samsara": {
         ranks: 3,
         text: "Whenever Amara deals damage to an enemy with her Action Skill, she adds a stack of Samsara. For every stack of Samsara, Amara gains increased Gun Damage and Health Regeneration for a few seconds. Stacks decay after a few seconds.",
-        effect: (rank, level) => `Gun Damage: +${percent(rank, 1.7)}%, Health Regeneration: +${percent(rank, 1.7)}%, Max Samara Stacks: 5, Duration: 20 seconds`,
+        effect: (rank, level) => `Gun Damage: +${percent(rank, 1.67)}%, Health Regeneration: +${percent(rank, 1.67)}%, Max Samara Stacks: 5, Duration: 20 seconds`,
       },
       "Helping Hand(s)": {
         ranks: 5,
         text: "For a few seconds after using her Action Skill, Amara's arms remain active and grant her Damage Reduction.",
-        effect: (rank, level) => `Damage Reduction: +${percent(rank, 12)}%, Duration: 15 seconds`,
+        effect: (rank, level) => `Damage Reduction: +${getArmsDealSplashDamageReduction(rank)}%, Duration: 15 seconds`,
       },
       "Blight Tiger": {
         ranks: 0,
@@ -68,7 +139,7 @@ const skills = {
       "Mindfulness": {
         ranks: 3,
         text: "Whenenever Amara takes damage, she gains a stack of Mindfulness. For every stack of Mindfulness, Amara gains improved Shield Regeneration Dely and Movement Speed. Stacks decay after a few seconds.",
-        effect: (rank, level) => `Shield Regeneration Delay: -${percent(rank, 9)}%, Movement Speed: +${percent(rank, 1.4)}%, Max Mindfulness Stacks: 25, Duration 5 seconds`,
+        effect: (rank, level) => `Shield Regeneration Delay: -${getMindfulnessShieldRegenDelay(rank)}%, Movement Speed: +${percent(rank, 1.4)}%, Max Mindfulness Stacks: 25, Duration 5 seconds`,
       },
       "Find Your Center": {
         ranks: 1,
@@ -78,12 +149,12 @@ const skills = {
       "Vigor": {
         ranks: 3,
         text: "Kill Skill. Killing an enemy with Amara's Action Skill grants all allies increased Movement Speed for a few seconds.",
-        effect: (rank, level) => `Team Movement Speed: +${percent(rank, 3.3)}%, Duration: 8 sec`,
+        effect: (rank, level) => `Team Movement Speed: +${percent(rank, 3.33)}%, Duration: 8 sec`,
       },
       "Revelation": {
         ranks: 0,
         text: "Amara's Action Skill now creates a Nova when it damages enemies, dealing damage to all nearby enemies.",
-        effect: (rank, level) => `Nova Damage ${flat(rank, level, 41)}, Action Skill Damage -15%`,
+        effect: (rank, level) => `Nova Damage ${flat(rank, level, 18)}, Action Skill Damage -15%`,
         type: SKILLS.AUGMENT_CHEVRON,
       },
     },
@@ -97,7 +168,7 @@ const skills = {
       "One With Nature": {
         ranks: 5,
         text: "Amara gains increased Max Health and Elemental Damage Resistance to her Action Skill Element.",
-        effect: (rank, level) => `Max Health: +${percent(rank, 5)}%, Elemental Damage Reduction: +${percent(rank, 12)}%`,
+        effect: (rank, level) => `Max Health: +${percent(rank, 5)}%, Elemental Damage Reduction: +${getArmsDealSplashDamageReduction(rank)}%`,
       },
     },
     "5": {
@@ -144,12 +215,12 @@ const skills = {
       "Do Harm": {
         ranks: 5,
         text: "Killing an enemy grants Amara a stack of Rush. Activating her Action Skill consumes all Rush stacks. For every stack of Rush consumed, Amara's Action Skill Damage is temporarily increased.",
-        effect: (rank, level) => ` Action Skill Damage: +${percent(rank, 0.9)}% per stack consumed, Duration 20 seconds`,
+        effect: (rank, level) => `Max Rush Stacks: 10, Action Skill Damage: +${percent(rank, 0.9)}% per stack consumed, Duration 20 seconds`,
       },
       "Fast Hand(s)": {
         ranks: 3,
         text: "Amara's Reload Speed, Weapon Swap Speed, and Mode Switch Speed are improved.",
-        effect: (rank, level) => `Reload Speed: +${percent(rank, 7)}%, Weapon Swap Speed: +${percent(rank, 16)}%, Mode Switch Speed: +${percent(rank, 16)}%`,
+        effect: (rank, level) => `Reload Speed: +${getFastHandsReloadSpeed(rank)}%, Weapon Swap Speed: +${getFastHandsOtherSpeed(rank)}%, Mode Switch Speed: +${getFastHandsOtherSpeed(rank)}%`,
       },
       "Violent Tapestry": {
         ranks: 5,
@@ -161,12 +232,12 @@ const skills = {
       "Alacrity": {
         ranks: 5,
         text: "Amara gains increased Reload Speed for every stack of Rush. After consuming Rush stacks, this bonus is increased for a few seconds.",
-        effect: (rank, level) => `Reload Speed: +${percent(rank, 0.4)}% per stack, Reload Speed: (+${percent(rank, 0.6)}% after action skill use, Duration: 8 sec`,
+        effect: (rank, level) => `Reload Speed: +${percent(rank, 0.4)}% per stack, Reload Speed: +${percent(rank, 0.585)}% after action skill use, Duration: 8 sec`,
       },
       "Transcend": {
         ranks: 3,
         text: "Amara gains increased Accuracy and Critical Hit Damage for a few seconds after activating her Action Skill.",
-        effect: (rank, level) => `Accuracy: +${percent(rank, 17)}%, Critical Hit Damage: +${percent(rank, 9)}%, Duration: 12 sec`,
+        effect: (rank, level) => `Accuracy: +${decreasingAddition(rank, level, 17, 0.72)}%, Critical Hit Damage: +${percent(rank, 9)}%, Duration: 12 sec`,
       },
       "Restless": {
         ranks: 5,
@@ -195,7 +266,7 @@ const skills = {
       "Stillness of Mind": {
         ranks: 0,
         text: "Enemies damaged by Action Skills becomes Phaselocked until they are damaged or duration ends, but Action Skill Cooldown is increased. If an enemy is the target of Phasegrasp, nearby enemies are also Phaselocked.",
-        effect: (rank, level) => `Damage -35%, Max Duration 6 sec, Cooldown +15%`,
+        effect: (rank, level) => `Damage -25%, Max Duration 6 sec, Cooldown +15%`,
         type: SKILLS.AUGMENT_CHEVRON,
       },
     },
@@ -209,24 +280,24 @@ const skills = {
       "From Rest": {
         ranks: 3,
         text: "Amara gains improved Fire Rate and Charge Time.",
-        effect: (rank, level) => `Fire Rate: +${percent(rank, 4)}%, Charge Time: +${percent(rank, 21)}%`,
+        effect: (rank, level) => `Fire Rate: +${percent(rank, 4)}%, Charge Time: +${decreasingAddition(rank, level, 21, 0.66)}%`,
       },
       "Laid Bare": {
         ranks: 3,
         text: "Enemies take increased damage from all sources for a few seconds after being damaged by Amara's Action Skill.",
-        effect: (rank, level) => `Damage Increase: +${percent(rank, 8.3)}%, Duration: 8 sec`,
+        effect: (rank, level) => `Damage Increase: +${percent(rank, 8.33)}%, Duration: 8 sec`,
       },
       "Wrath": {
         ranks: 3,
         text: "Amara gains increased Gun Damage. This effect is increased after she activates her action skill for a few seconds.",
-        effect: (rank, level) => `Gun Damage: +${percent(rank, 6.7)}%, Gun Damage: +${percent(rank, 67)}% after action skill use, Duration: 8 seconds`,
+        effect: (rank, level) => `Gun Damage: +${percent(rank, 6.66)}%, Gun Damage: +${percent(rank, 6.66)}% after action skill use, Duration: 8 seconds`,
       },
     },
     "5": {
       "Remnant": {
         ranks: 3,
         text: "When Amara kills an enemy with a Gun or Action Skill, she creates a homing projectile that seeks out a new enemy dealing her Action Skill Elemental Damage. Any Overkill Damage is added to the projectile's damage.",
-        effect: (rank, level) => `Remnant Damage ${flat(rank, level, 9)}`,
+        effect: (rank, level) => `Remnant Damage ${decreasingAddition(rank, level, 9.1, 0.98)}`,
       },
       "Awakening": {
         ranks: 3,
@@ -266,7 +337,7 @@ const skills = {
       "Steady Hands": {
         ranks: 3,
         text: "Amara gains increased Weapon Handling and Accuracy.",
-        effect: (rank, level) => `Handling: +${percent(rank, 14)}%, Accuracy: +${percent(rank, 13)}%`,
+        effect: (rank, level) => `Handling: +${decreasingAddition(rank, level, 14, 0.75)}%, Accuracy: +${decreasingAddition(rank, level, 13.1, 0.8)}%`,
       },
       "Infusion": {
         ranks: 5,
@@ -320,7 +391,7 @@ const skills = {
       "Indiscriminate": {
         ranks: 3,
         text: "Amara's bullets that damage enemies have a chance to ricochet and deal decreased damage to other nearby enemies. Richochet Chance and Damage are increased if target is affected by Phasegrasp or Stillness of Mind.",
-        effect: (rank, level) => `Ricochet Chance: ${percent(rank, 10)}%, Ricochet Damage: -${50 - rank * 10}%, Action Skill Ricochet Chance: ${percent(rank, 20)}%, Action Skill Ricochet Damage: -${25 - rank * 5}%`, // TODO check this
+        effect: (rank, level) => `Ricochet Chance: ${percent(rank, 10)}%, Ricochet Damage: -${50}%, Action Skill Ricochet Chance: ${percent(rank, 20)}%, Action Skill Ricochet Damage: -${25}%`,
       },
       "Deep Well": {
         ranks: 1,
@@ -330,7 +401,7 @@ const skills = {
       "Catharsis": {
         ranks: 3,
         text: "Whenever Amara riggers an elemental effect on an enemy, when that enemy that dies the enemy explodes, dealing her attuned element damage along with any other element that is currently inflicted upon that enemy. This skill has a short cooldown.",
-        effect: (rank, level) => `Damage: ${flat(rank, level, 4)}, Cooldown: 8 seconds`,
+        effect: (rank, level) => `Damage: ${flat(rank, level, 4.34)}, Cooldown: 8 seconds`,
       },
       "Ties That Bind": {
         ranks: 0,

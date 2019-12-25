@@ -11,10 +11,12 @@ function flatCeil (rank, level, unit) {
 }
 /* some skills increase by an amount that decreases by a constant factor each time */
 function decreasingAddition (rank, level, unit, multiplier) {
-  if (rank === 0) {
-    return 0;
+  var result = 0;
+  for (var i = 0; i < rank; i++){
+    var currentMultiplier = Math.pow(multiplier, i);
+    result = result + currentMultiplier * unit;
   }
-  return Math.floor((Math.pow(multiplier, rank - 1) * unit) + decreasingAddition(rank - 1, level, unit, multiplier))
+  return Math.floor(result);
 }
 
 /* There are skills that dont follow a linear patch for some increases. Data came from official builder.*/
@@ -224,7 +226,7 @@ const skills = {
       "Cold Bore": {
         text: "Zane gains increased Weapon Swap Speed. The next shot fired after swapping weapons deals Bonus Cryo Damage.",
         ranks: 5,
-        effect: (rank, level) => `Weapon Swap Speed +${decreasingAddition(rank, level, 13, 0.82)}%, Bonus Cryo Damage ${percent(rank, 6)}%`,
+        effect: (rank, level) => `Weapon Swap Speed +${decreasingAddition(rank, level, 13, 0.8)}%, Bonus Cryo Damage ${percent(rank, 6)}%`,
       },
       "Violent Momentum": {
         text: "Zane's Gun Damage is increased while moving. The quicker he moves, the greater the Gun Damage bonus.",
